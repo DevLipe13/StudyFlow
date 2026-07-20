@@ -1,0 +1,115 @@
+{
+  "realm": "studyflow",
+  "enabled": true,
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "loginTheme": "studyflow",
+  "accountTheme": "keycloak.v2",
+  "attributes": {
+    "userProfileEnabled": "true"
+  },
+  "roles": {
+    "realm": [
+      { "name": "estudante", "description": "Perfil Estudante" },
+      { "name": "admin", "description": "Perfil Admin" }
+    ]
+  },
+  "defaultRoles": ["estudante"],
+  "clients": [
+    {
+      "clientId": "studyflow-web",
+      "name": "StudyFlow Angular",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "cpf",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "cpf",
+            "claim.name": "cpf",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "birthDate",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "birthDate",
+            "claim.name": "birthDate",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "educationLevel",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "educationLevel",
+            "claim.name": "educationLevel",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "profile",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "profile",
+            "claim.name": "profile",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "studyflow-api",
+      "name": "StudyFlow API",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "CHANGE_ME_API_SECRET",
+      "serviceAccountsEnabled": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    },
+    {
+      "clientId": "studyflow-admin-cli",
+      "name": "StudyFlow Admin CLI",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "CHANGE_ME_ADMIN_SECRET",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    }
+  ]
+}
