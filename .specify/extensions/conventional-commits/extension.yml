@@ -1,0 +1,84 @@
+schema_version: "1.0"
+
+extension:
+  id: conventional-commits
+  name: Conventional Commits
+  version: 1.3.0
+  description: >
+    Conventional Commits: um commit por task do tasks.md, branch fora de main e push.
+  author: StudyFlow
+  repository: https://github.com/DevLipe13/StudyFlow
+  license: MIT
+
+requires:
+  speckit_version: ">=0.3.2"
+  tools:
+    - name: git
+      required: true
+      version: ">=2.0"
+
+provides:
+  commands:
+    - name: speckit.conventional-commits.suggest
+      file: commands/suggest.md
+      description: >
+        Gera mensagem Conventional Commit a partir do tasks.md + diff (sem commitar).
+    - name: speckit.conventional-commits.commit
+      file: commands/commit.md
+      description: >
+        Um commit por task do tasks.md; cria branch se em main; push no final.
+    - name: speckit.conventional-commits.validate
+      file: commands/validate.md
+      description: >
+        Valida se uma mensagem segue Conventional Commits (constitution).
+
+  config:
+    - name: conventional-commits-config.yml
+      template: conventional-commits-config.template.yml
+      description: Tipos, escopos e comportamento de auto-sugestão
+      required: false
+
+hooks:
+  after_implement:
+    command: speckit.conventional-commits.commit
+    optional: true
+    description: Commit+push Conventional Commit após /speckit-implement
+    prompt: >
+      Deseja gerar o Conventional Commit, criar branch (se em main) e fazer
+      push? Execute /speckit-conventional-commits-commit
+  after_converge:
+    command: speckit.conventional-commits.commit
+    optional: true
+    description: Commit+push Conventional Commit após /speckit-converge
+    prompt: >
+      Deseja gerar o Conventional Commit, criar branch (se em main) e fazer
+      push? Execute /speckit-conventional-commits-commit
+
+tags:
+  - git
+  - commit
+  - conventional-commits
+  - productivity
+
+defaults:
+  types:
+    - feat
+    - fix
+    - docs
+    - refactor
+    - test
+    - chore
+    - style
+    - perf
+    - ci
+    - build
+  require_scope: false
+  subject_max_length: 72
+  auto_stage: true
+  auto_push: true
+  message_from_tasks: true
+  commits_per_task: true
+  protected_branches:
+    - main
+    - homologacao
+    - treinamento

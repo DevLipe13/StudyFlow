@@ -1,0 +1,47 @@
+# Copie para conventional-commits-config.yml e ajuste.
+# Tipos alinhados à constituição StudyFlow (Conventional Commits).
+
+types:
+  - feat
+  - fix
+  - docs
+  - refactor
+  - test
+  - chore
+  - style
+  - perf
+  - ci
+  - build
+
+# Escopos sugeridos (opcional). Deixe vazio para livre.
+scopes:
+  - auth
+  - backend
+  - frontend
+  - keycloak
+  - docker
+  - specs
+
+require_scope: false
+subject_max_length: 72
+
+# Stage automático dos arquivos da mudança (exceto segredos)
+auto_stage: true
+
+# Após o commit, fazer push -u origin HEAD
+auto_push: true
+
+# Preferir mensagem derivada do tasks.md da feature (IDs Txxx + descrição)
+message_from_tasks: true
+
+# true = um commit por task; false = um commit agrupando todas as tasks do diff
+commits_per_task: true
+
+# Em cima destas branches: criar branch a partir do subject ANTES do commit/push
+protected_branches:
+  - main
+  - homologacao
+  - treinamento
+
+# Idioma do corpo da mensagem (subject técnico em inglês quando possível)
+body_language: pt-BR

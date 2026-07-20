@@ -1,0 +1,29 @@
+installed:
+- conventional-commits
+settings:
+  auto_execute_hooks: true
+hooks:
+  after_implement:
+  - extension: conventional-commits
+    command: speckit.conventional-commits.commit
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: 'Deseja gerar o Conventional Commit, criar branch (se em main) e fazer
+      push? Execute /speckit-conventional-commits-commit
+
+      '
+    description: Commit+push Conventional Commit após /speckit-implement
+    condition: null
+  after_converge:
+  - extension: conventional-commits
+    command: speckit.conventional-commits.commit
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: 'Deseja gerar o Conventional Commit, criar branch (se em main) e fazer
+      push? Execute /speckit-conventional-commits-commit
+
+      '
+    description: Commit+push Conventional Commit após /speckit-converge
+    condition: null
