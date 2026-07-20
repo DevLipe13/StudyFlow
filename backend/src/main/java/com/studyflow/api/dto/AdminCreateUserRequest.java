@@ -1,0 +1,15 @@
+package com.studyflow.api.dto;
+
+import com.studyflow.domain.EducationLevel;
+import com.studyflow.domain.ProfileType;
+import java.time.LocalDate;
+
+public record AdminCreateUserRequest(
+        String name,
+        String email,
+        String cpf,
+        LocalDate birthDate,
+        EducationLevel educationLevel,
+        ProfileType profile,
+        String password) {
+}
