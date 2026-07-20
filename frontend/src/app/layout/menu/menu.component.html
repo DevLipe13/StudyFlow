@@ -1,0 +1,24 @@
+<header class="menu">
+  <div class="menu__brand">
+    <span class="menu__title">StudyFlow</span>
+    @if (user(); as currentUser) {
+      <span class="menu__user">{{ currentUser.name }}</span>
+    }
+  </div>
+
+  <nav class="menu__nav" aria-label="Menu principal">
+    <a routerLink="/dashboard" routerLinkActive="menu__link--active" class="menu__link">Dashboard</a>
+
+    @if (showStudentTasks()) {
+      <a routerLink="/tarefas" routerLinkActive="menu__link--active" class="menu__link">Criar tarefas</a>
+      <a routerLink="/alteracao-login" routerLinkActive="menu__link--active" class="menu__link">Alterar login</a>
+    }
+
+    @if (showAdminUsers()) {
+      <a routerLink="/usuarios" routerLinkActive="menu__link--active" class="menu__link">Usuários</a>
+      <a routerLink="/alteracao-login/admin" routerLinkActive="menu__link--active" class="menu__link">Aprovar login</a>
+    }
+
+    <button type="button" class="menu__link menu__link--button" (click)="logout()">Sair</button>
+  </nav>
+</header>
