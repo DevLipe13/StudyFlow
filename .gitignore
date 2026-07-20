@@ -1,0 +1,35 @@
+# Universal
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+*.log
+.env
+.env.*
+!.env.example
+
+# Java / Quarkus
+backend/target/
+*.class
+*.jar
+*.war
+.gradle/
+build/
+
+# Node / Angular
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+*.log
+coverage/
+npm-debug.log*
+
+# Docker
+*.log*
+
+# Keycloak local data
+keycloak/data/
+postgres-data/

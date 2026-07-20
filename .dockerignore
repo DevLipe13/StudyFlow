@@ -1,0 +1,17 @@
+.git
+.github
+.cursor
+.specify
+specs
+**/node_modules
+**/dist
+**/target
+**/.angular
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage
+**/*.log
+README.md
+**/.idea
+**/.vscode
