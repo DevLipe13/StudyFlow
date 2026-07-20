@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-studyflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studyflow}
+      POSTGRES_DB: ${POSTGRES_DB:-studyflow}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      KC_HTTP_PORT: 8080
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/themes/studyflow:/opt/keycloak/themes/studyflow
+      - ./keycloak/realm:/opt/keycloak/data/import
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
