@@ -1,0 +1,1 @@
+../../../.specify/extensions/conventional-commits/.specify-dev/agent-commands/cursor-agent/speckit-conventional-commits-validate/SKILL.md
