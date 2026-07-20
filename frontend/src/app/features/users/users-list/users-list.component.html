@@ -1,0 +1,33 @@
+<section class="page">
+  <header class="page__header">
+    <h1>Usuários</h1>
+    <a routerLink="/usuarios/novo" class="btn btn--primary">Novo usuário</a>
+  </header>
+
+  <label class="filter">
+    <input type="checkbox" [checked]="includeDisabled()" (change)="toggleIncludeDisabled()" />
+    Incluir desabilitados
+  </label>
+
+  @if (loading()) {
+    <p>Carregando...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (!users().length) {
+    <p>Nenhum usuário encontrado.</p>
+  } @else {
+    <ul class="user-list">
+      @for (user of users(); track user.id) {
+        <li class="user-list__item">
+          <a [routerLink]="['/usuarios', user.id]" class="user-list__link">
+            <span class="user-list__name">{{ user.name }}</span>
+            <span class="user-list__meta">{{ user.email }} · {{ profileLabels[user.profile] }}</span>
+            @if (user.disabled) {
+              <span class="badge badge--disabled">Desabilitado</span>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>

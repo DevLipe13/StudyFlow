@@ -1,0 +1,60 @@
+<section class="page">
+  <a routerLink="/usuarios" class="back-link">← Voltar</a>
+
+  <h1>{{ isEditMode() ? 'Editar usuário' : 'Novo usuário' }}</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+    <label>
+      Nome
+      <input type="text" formControlName="name" />
+    </label>
+
+    <label>
+      E-mail
+      <input type="email" formControlName="email" />
+    </label>
+
+    <label>
+      CPF
+      <input type="text" formControlName="cpf" />
+    </label>
+
+    <label>
+      Data de nascimento
+      <input type="date" formControlName="birthDate" />
+    </label>
+
+    <label>
+      Formação
+      <select formControlName="educationLevel">
+        @for (level of educationLevels; track level) {
+          <option [value]="level">{{ educationLevelLabels[level] }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Perfil
+      <select formControlName="profile">
+        @for (profile of profiles; track profile) {
+          <option [value]="profile">{{ profileLabels[profile] }}</option>
+        }
+      </select>
+    </label>
+
+    @if (!isEditMode()) {
+      <label>
+        Senha
+        <input type="password" formControlName="password" autocomplete="new-password" />
+      </label>
+    }
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button type="submit" class="btn btn--primary" [disabled]="loading()">
+      {{ loading() ? 'Salvando...' : 'Salvar' }}
+    </button>
+  </form>
+</section>
