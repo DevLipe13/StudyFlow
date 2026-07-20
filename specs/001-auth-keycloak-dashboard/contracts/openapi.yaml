@@ -1,0 +1,479 @@
+openapi: 3.0.3
+info:
+  title: StudyFlow API — Auth & Users
+  version: 0.1.0
+  description: |
+    Contratos REST da feature 001-auth-keycloak-dashboard.
+    Todas as rotas exigem Bearer JWT emitido pelo Keycloak (OIDC),
+    exceto /health se exposto pelo runtime.
+servers:
+  - url: /api/v1
+    description: API versionada
+tags:
+  - name: users
+  - name: loginChange
+  - name: health
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      tags: [health]
+      security: []
+      summary: Health check (opcional para orquestração)
+      responses:
+        "200":
+          description: OK
+  /users/me:
+    get:
+      tags: [users]
+      summary: Perfil do usuário autenticado
+      responses:
+        "200":
+          description: Perfil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Usuário desabilitado na base local
+  /users/me/bootstrap:
+    post:
+      tags: [users]
+      summary: Cria perfil local no primeiro acesso (auto-cadastro / sync)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserBootstrapRequest"
+      responses:
+        "201":
+          description: Perfil criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "200":
+          description: Perfil já existia — retorna atual
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: E-mail ou CPF já cadastrado
+  /users:
+    get:
+      tags: [users]
+      summary: Lista usuários (Admin)
+      parameters:
+        - name: includeDisabled
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      tags: [users]
+      summary: Cria usuário no Keycloak + base (Admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateUserRequest"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Conflito de e-mail/CPF/Keycloak
+  /users/{userId}:
+    get:
+      tags: [users]
+      summary: Detalhe de usuário (Admin)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    patch:
+      tags: [users]
+      summary: Edita perfil (não e-mail/senha) (Admin)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateUserRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /users/{userId}/disable:
+    post:
+      tags: [users]
+      summary: Desabilita no Keycloak + soft delete local (Admin)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "204":
+          description: Desabilitado
+        "400":
+          description: Não pode desabilitar a si mesmo
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Falha de sincronização Keycloak/base
+  /users/{userId}/enable:
+    post:
+      tags: [users]
+      summary: Reabilita no Keycloak + remove soft delete (Admin)
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        "204":
+          description: Reabilitado
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Falha de sincronização Keycloak/base
+  /login-change-requests:
+    post:
+      tags: [loginChange]
+      summary: Estudante solicita alteração de e-mail e/ou senha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginChangeCreateRequest"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginChangeResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    get:
+      tags: [loginChange]
+      summary: Lista solicitações (Admin vê todas pendentes; estudante as próprias)
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LoginChangeResponse"
+  /login-change-requests/{requestId}/approve:
+    post:
+      tags: [loginChange]
+      summary: Admin aprova
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginChangeResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /login-change-requests/{requestId}/reject:
+    post:
+      tags: [loginChange]
+      summary: Admin rejeita
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rejectionReason:
+                  type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginChangeResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /login-change-requests/{requestId}/complete:
+    post:
+      tags: [loginChange]
+      summary: Estudante conclui com CPF + novos dados de login
+      parameters:
+        - $ref: "#/components/parameters/requestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginChangeCompleteRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginChangeResponse"
+        "400":
+          description: CPF inválido ou payload incompleto
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: Status não aprovado ou falha Keycloak
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    requestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: JWT ausente ou inválido
+    Forbidden:
+      description: Perfil insuficiente ou usuário desabilitado
+    BadRequest:
+      description: Validação falhou
+    NotFound:
+      description: Recurso não encontrado
+  schemas:
+    ProfileType:
+      type: string
+      enum: [estudante, admin]
+    EducationLevel:
+      type: string
+      enum: [fundamental, medio, graduacao, posGraduacao, outro]
+    UserResponse:
+      type: object
+      required:
+        - id
+        - keycloakId
+        - name
+        - email
+        - cpf
+        - birthDate
+        - educationLevel
+        - profile
+        - createdAt
+        - updatedAt
+        - disabled
+      properties:
+        id:
+          type: string
+          format: uuid
+        keycloakId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        cpf:
+          type: string
+          description: Pode ser mascarado em listagens (ex. ***.***.***-XX)
+        birthDate:
+          type: string
+          format: date
+        educationLevel:
+          $ref: "#/components/schemas/EducationLevel"
+        profile:
+          $ref: "#/components/schemas/ProfileType"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        disabled:
+          type: boolean
+          description: true quando deletedAt está preenchido
+    UserBootstrapRequest:
+      type: object
+      required: [name, cpf, birthDate, educationLevel]
+      properties:
+        name:
+          type: string
+        cpf:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        educationLevel:
+          $ref: "#/components/schemas/EducationLevel"
+    AdminCreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+        - cpf
+        - birthDate
+        - educationLevel
+        - profile
+        - password
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        cpf:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        educationLevel:
+          $ref: "#/components/schemas/EducationLevel"
+        profile:
+          $ref: "#/components/schemas/ProfileType"
+        password:
+          type: string
+          format: password
+          description: Senha final; nunca retornada; só enviada ao Keycloak
+    AdminUpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        cpf:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        educationLevel:
+          $ref: "#/components/schemas/EducationLevel"
+        profile:
+          $ref: "#/components/schemas/ProfileType"
+      description: Não inclui e-mail nem senha (FR-021)
+    LoginChangeType:
+      type: string
+      enum: [email, password, emailAndPassword]
+    LoginChangeStatus:
+      type: string
+      enum: [pending, approved, rejected, completed]
+    LoginChangeCreateRequest:
+      type: object
+      required: [changeType]
+      properties:
+        changeType:
+          $ref: "#/components/schemas/LoginChangeType"
+        proposedEmail:
+          type: string
+          format: email
+    LoginChangeCompleteRequest:
+      type: object
+      required: [cpf]
+      properties:
+        cpf:
+          type: string
+        newEmail:
+          type: string
+          format: email
+        newPassword:
+          type: string
+          format: password
+    LoginChangeResponse:
+      type: object
+      required: [id, requesterUserId, changeType, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        requesterUserId:
+          type: string
+          format: uuid
+        changeType:
+          $ref: "#/components/schemas/LoginChangeType"
+        status:
+          $ref: "#/components/schemas/LoginChangeStatus"
+        proposedEmail:
+          type: string
+        reviewedByUserId:
+          type: string
+          format: uuid
+        reviewedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        rejectionReason:
+          type: string
