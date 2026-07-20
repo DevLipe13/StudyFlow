@@ -1,0 +1,92 @@
+<section class="page">
+  <h1>Alteração de login</h1>
+  <p class="intro">Solicite alteração de e-mail e/ou senha. Após aprovação do admin, confirme com seu CPF.</p>
+
+  @if (success()) {
+    <p class="success">{{ success() }}</p>
+  }
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <section class="card">
+    <h2>Nova solicitação</h2>
+    <form [formGroup]="requestForm" (ngSubmit)="submitRequest()" class="form">
+      <label>
+        Tipo de alteração
+        <select formControlName="changeType">
+          @for (type of changeTypes; track type) {
+            <option [value]="type">{{ typeLabels[type] }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Novo e-mail proposto
+        <input type="email" formControlName="proposedEmail" />
+      </label>
+
+      <button type="submit" class="btn">Solicitar</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Concluir solicitação aprovada</h2>
+    <form [formGroup]="completeForm" (ngSubmit)="submitComplete()" class="form">
+      <label>
+        Solicitação aprovada
+        <select formControlName="requestId">
+          <option value="">Selecione...</option>
+          @for (request of approvedRequests(); track request.id) {
+            <option [value]="request.id">
+              {{ typeLabels[request.changeType] }}
+              @if (request.proposedEmail) {
+                — {{ request.proposedEmail }}
+              }
+            </option>
+          }
+        </select>
+      </label>
+
+      <label>
+        CPF
+        <input type="text" formControlName="cpf" />
+      </label>
+
+      <label>
+        Novo e-mail
+        <input type="email" formControlName="newEmail" />
+      </label>
+
+      <label>
+        Nova senha
+        <input type="password" formControlName="newPassword" autocomplete="new-password" />
+      </label>
+
+      <button type="submit" class="btn">Concluir</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Minhas solicitações</h2>
+
+    @if (loading()) {
+      <p>Carregando...</p>
+    } @else if (!requests().length) {
+      <p>Nenhuma solicitação encontrada.</p>
+    } @else {
+      <ul class="list">
+        @for (request of requests(); track request.id) {
+          <li>
+            <strong>{{ typeLabels[request.changeType] }}</strong>
+            · {{ statusLabels[request.status] }}
+            @if (request.status === 'approved') {
+              <button type="button" class="link-btn" (click)="selectApproved(request)">Usar esta</button>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</section>

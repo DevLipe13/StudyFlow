@@ -1,0 +1,31 @@
+<section class="page">
+  <h1>Solicitações de alteração de login</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p>Carregando...</p>
+  } @else if (!requests().length) {
+    <p>Nenhuma solicitação pendente.</p>
+  } @else {
+    <ul class="list">
+      @for (request of requests(); track request.id) {
+        <li class="list__item">
+          <div>
+            <strong>{{ typeLabels[request.changeType] }}</strong>
+            <span class="list__meta">#{{ request.id }}</span>
+            @if (request.proposedEmail) {
+              <span class="list__meta">Novo e-mail: {{ request.proposedEmail }}</span>
+            }
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn--primary" (click)="approve(request.id)">Aprovar</button>
+            <button type="button" class="btn btn--danger" (click)="reject(request.id)">Rejeitar</button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>
