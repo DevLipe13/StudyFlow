@@ -1,0 +1,31 @@
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(160deg, #0f3d2e 0%, #1a5c45 45%, #e8f5ef 100%);
+  min-height: 100vh;
+}
+
+.login-pf body {
+  background: transparent;
+}
+
+#kc-header-wrapper {
+  color: #f4fff8;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.card-pf {
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.btn-primary {
+  background: #1a5c45;
+  border-color: #1a5c45;
+}
+
+.profile-fixed input[readonly] {
+  background: #f0f4f2;
+  color: #1a5c45;
+  font-weight: 600;
+}
