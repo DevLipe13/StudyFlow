@@ -34,6 +34,7 @@ Não use `--no-verify`, `--amend` (salvo protocolo do usuário) nem force push.
 - Mensagem via HEREDOC **por commit**.
 - Nunca push direto em `main` / `homologacao` / `treinamento`.
 - Em branch protegida: criar branch nova **antes** do primeiro commit.
+- **Autor único = usuário do git local.** Nunca adicione `Co-authored-by:`, `Signed-off-by:` de agentes/IA, nem trailers de co-autoria. Se o ambiente inserir `Co-authored-by:` após o commit, remova **antes do push** com amend da mensagem (só o commit que você acabou de criar nesta sessão, ainda não compartilhado indevidamente — ou com `git commit --amend` imediatamente após cada commit do loop).
 
 ## Config
 
@@ -202,6 +203,15 @@ EOF
 ```
 
 Pre-commit falhou → corrija e **novo** commit (não `--amend`, salvo protocolo).
+
+Logo após cada commit bem-sucedido, se a mensagem contiver `Co-authored-by:`:
+
+```bash
+MSG="$(git log -1 --format=%B | sed '/^Co-authored-by:/Id' | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')"
+git commit --amend -m "$MSG"
+```
+
+(Isso só limpa trailer de co-autor; não mexe no author do `git config`.)
 
 #### 5.5 Próxima Phase
 
