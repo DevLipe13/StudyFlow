@@ -9,8 +9,8 @@ hooks:
     enabled: true
     optional: true
     priority: 10
-    prompt: 'Deseja gerar o Conventional Commit, criar branch (se em main) e fazer
-      push? Execute /speckit-conventional-commits-commit
+    prompt: 'Deseja gerar o Conventional Commit por Phase, criar branch (se em main)
+      e fazer push? Execute /speckit-conventional-commits-commit
 
       '
     description: Commit+push Conventional Commit após /speckit-implement
@@ -21,8 +21,8 @@ hooks:
     enabled: true
     optional: true
     priority: 10
-    prompt: 'Deseja gerar o Conventional Commit, criar branch (se em main) e fazer
-      push? Execute /speckit-conventional-commits-commit
+    prompt: 'Deseja gerar o Conventional Commit por Phase, criar branch (se em main)
+      e fazer push? Execute /speckit-conventional-commits-commit
 
       '
     description: Commit+push Conventional Commit após /speckit-converge

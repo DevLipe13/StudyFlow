@@ -34,8 +34,11 @@ auto_push: true
 # Preferir mensagem derivada do tasks.md da feature (IDs Txxx + descrição)
 message_from_tasks: true
 
-# true = um commit por task; false = um commit agrupando todas as tasks do diff
-commits_per_task: true
+# Agrupamento de commits:
+#   phase  = um commit por ## Phase N do tasks.md (padrão)
+#   task   = um commit por Txxx
+#   single = um commit com todas as tasks do diff
+commit_grouping: phase
 
 # Em cima destas branches: criar branch a partir do subject ANTES do commit/push
 protected_branches:

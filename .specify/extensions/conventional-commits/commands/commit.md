@@ -1,5 +1,5 @@
 ---
-description: "Um Conventional Commit por task do tasks.md; branch se em main; push"
+description: "Um Conventional Commit por Phase do tasks.md; branch se em main; push"
 ---
 
 ## User Input
@@ -10,19 +10,19 @@ $ARGUMENTS
 
 Argumentos opcionais:
 
-- lista de IDs (`T081 T082`) → só essas tasks (nessa ordem)
-- vazio → deriva tasks do `tasks.md` + diff
-- **não** passe uma mensagem única para várias tasks (cada task gera a própria)
+- lista de IDs (`T081 T082`) → só essas tasks entram, ainda **agrupadas por Phase**
+- vazio → deriva tasks do `tasks.md` + diff, agrupa por Phase
+- **não** passe uma mensagem única para “tudo” (cada Phase gera a própria)
 
 ## Objetivo
 
-Criar **vários commits**, **um por task** do `tasks.md`:
+Criar **vários commits**, **um por Phase** do `tasks.md` (não um por task):
 
 1. Localizar `tasks.md`
-2. Mapear diff → lista ordenada de tasks (`Txxx`)
-3. Se branch protegida: criar **uma** branch (pelo subject da **primeira** task) **antes** de qualquer commit
-4. Para **cada** task, na ordem: stage **somente** os arquivos dela → commit Conventional Commit dela
-5. Um único `git push -u origin HEAD` no final (com todos os commits)
+2. Mapear diff → tasks (`Txxx`) → **agrupar por Phase**
+3. Se branch protegida: criar **uma** branch (pelo subject da **primeira** Phase) **antes** de qualquer commit
+4. Para **cada Phase** (na ordem): stage arquivos daquela Phase → **um** Conventional Commit
+5. Um único `git push -u origin HEAD` no final
 
 Não use `--no-verify`, `--amend` (salvo protocolo do usuário) nem force push.
 
@@ -44,8 +44,36 @@ Defaults:
 - `auto_stage: true`
 - `auto_push: true`
 - `message_from_tasks: true`
-- `commits_per_task: true`  ← um commit por task
+- `commit_grouping: phase`  ← um commit por Phase
 - `protected_branches: [main, homologacao, treinamento]`
+
+## Como funciona o agrupamento por Phase
+
+No `tasks.md`, as tasks ficam sob cabeçalhos:
+
+```markdown
+## Phase 2: Foundational ...
+- [x] T015 ...
+- [x] T018 ...
+
+## Phase 9: Convergence
+- [x] T081 ...
+- [x] T082 ...
+```
+
+Algoritmo:
+
+1. Parseie o `tasks.md` de cima para baixo.
+2. Cada vez que aparecer `## Phase N: ...`, a Phase atual passa a ser essa (guarde número `N` + título).
+3. Cada linha `- [ ] Txxx` / `- [x] Txxx` **herda** a Phase atual (ID, descrição, paths em `` `...` ``).
+4. Relacione arquivos do diff às tasks (paths citados / componente óbvio).
+5. **Arquivo em 2+ tasks:** fica na task de **menor ID**; essa task define a Phase do arquivo.
+6. Agrupe: `Phase → [tasks com arquivo pendente] → [arquivos]`.
+7. Ignore Phases sem nenhum arquivo pendente.
+8. Ordene as Phases pelo número (`Phase 1` antes de `Phase 9`).
+9. **Um commit por Phase** restante.
+
+Exemplo: diff toca T081, T082 (Phase 9) e T050 (Phase 6) → **2 commits** (Phase 6, depois Phase 9), não 3.
 
 ## Passos
 
@@ -67,7 +95,7 @@ Ou:
 
 Sem mudanças → pare.
 
-Se houver algo já staged misturado, `git restore --staged .` (ou unstage seletivo) **antes** de começar o loop — para não misturar arquivos de tasks diferentes. Não descarte working tree.
+Se houver staged misturado: `git restore --staged .` antes do loop (não descarte working tree).
 
 ### 2. Localizar `tasks.md`
 
@@ -77,22 +105,15 @@ Se houver algo já staged misturado, `git restore --staged .` (ou unstage seleti
 
 Use `$FEATURE_DIR/tasks.md`.
 
-Se não houver `tasks.md`: **um** commit único pelo diff (fallback) + branch/push como antes — e avise que não houve split por task.
+Sem `tasks.md`: **um** commit único pelo diff (fallback) + branch/push; avise que não houve split por Phase.
 
-### 3. Montar a lista de tasks (ordenada)
+### 3. Montar tasks e agrupar por Phase
 
-Leia o `tasks.md`. Extraia de cada linha `- [x]` / `- [ ]` o ID `Txxx`, descrição e paths citados.
-
-Monte a lista assim:
-
-1. Se `$ARGUMENTS` tiver IDs → essa lista, na ordem dada
-2. Senão → tasks cujos paths aparecem no diff/status
-3. Ordene pelo número do ID (`T081` antes de `T090`)
-4. Prefira tasks que o diff claramente implementa (marcadas `[x]` ou arquivos novos/alterados batendo com a descrição)
-
-Cada task da lista **deve** ter pelo menos um arquivo do working tree associado. Se uma task não tiver arquivos restantes (já commitados ou só docs já incluídos em outra), **pule** com aviso.
-
-**Arquivo compartilhado por 2+ tasks:** inclua no commit da **menor** task ID da lista que o cita; nas seguintes, não resteage esse arquivo se já foi commitado.
+1. Parseie Phases + tasks (seção “Como funciona o agrupamento”).
+2. Se `$ARGUMENTS` tiver IDs → filtre só essas tasks (ainda agrupadas pela Phase de cada uma).
+3. Senão → tasks cujos paths aparecem no diff/status.
+4. Aplique regra de arquivo compartilhado (menor ID).
+5. Produza lista ordenada: `(phaseNumber, phaseTitle, tasks[], files[])`.
 
 ### 4. Branch protegida (uma vez)
 
@@ -104,27 +125,25 @@ CURRENT="$(git branch --show-current)"
 
 Se `CURRENT` ∈ `protected_branches`:
 
-1. Gere o subject da **primeira** task (passo 5)
+1. Gere o subject da **primeira** Phase do passo 5.3
 2. Crie a branch:
 
 ```bash
-BRANCH="$(.specify/extensions/conventional-commits/scripts/bash/subject-to-branch.sh "SUBJECT_PRIMEIRA_TASK")"
+BRANCH="$(.specify/extensions/conventional-commits/scripts/bash/subject-to-branch.sh "SUBJECT_PRIMEIRA_PHASE")"
 git checkout -b "$BRANCH"
 ```
 
 (Se já existir, sufixo `-2` / timestamp.)
 
-### 5. Loop: um commit por task
+### 5. Loop: um commit por Phase
 
-Para cada task `T` na lista:
+Para cada Phase `P` na lista ordenada:
 
-#### 5.1 Arquivos desta task
+#### 5.1 Arquivos desta Phase
 
-- Paths citados na linha da task no `tasks.md` que ainda estão modificados/untracked
-- Arquivos do diff claramente só dessa task (mesmo diretório/componente descrito)
+- União dos arquivos das tasks de `P` ainda pendentes
 - Exclua segredos
-
-Se a lista de arquivos desta task ficar vazia → pule `T`.
+- Lista vazia → pule `P`
 
 #### 5.2 Stage só esses arquivos
 
@@ -132,21 +151,28 @@ Se a lista de arquivos desta task ficar vazia → pule `T`.
 git add -- path1 path2 ...
 ```
 
-Confirme: `git diff --cached --stat` mostra **apenas** os arquivos de `T`.
+Confirme: `git diff --cached --stat` mostra **apenas** arquivos de `P`.
 
-#### 5.3 Mensagem desta task
+#### 5.3 Mensagem desta Phase
 
 Subject (≤ 72, imperativo, sem ponto final):
 
 ```text
-type(scope): <resumo da descrição da task> (T081)
+type(scope): complete Phase N short-title (T081-T083)
 ```
+
+- `type` / `scope`: derive do conteúdo dominante da Phase (ex.: só testes → `test`; keycloak → `keycloak`)
+- Intervalo de IDs: menor–maior na Phase; se poucos, liste `T081, T082`
+- Resumo: pode usar o título curto da Phase (sem emoji)
 
 Body (pt-BR se config disser):
 
 ```text
+Phase: Phase 9: Convergence
+
 Tasks:
-- T081: <descrição da task no tasks.md>
+- T081: <descrição curta>
+- T082: <descrição curta>
 
 Feature: <nome FEATURE_DIR>
 ```
@@ -161,10 +187,13 @@ Valide:
 
 ```bash
 git commit -m "$(cat <<'EOF'
-type(scope): resumo (T081)
+type(scope): complete Phase 9 convergence (T081-T083)
+
+Phase: Phase 9: Convergence
 
 Tasks:
 - T081: ...
+- T082: ...
 
 Feature: 001-auth-keycloak-dashboard
 
@@ -172,23 +201,21 @@ EOF
 )"
 ```
 
-Pre-commit falhou → corrija só o necessário dessa task e **novo** commit (não `--amend`, salvo protocolo).
+Pre-commit falhou → corrija e **novo** commit (não `--amend`, salvo protocolo).
 
-#### 5.5 Próxima task
+#### 5.5 Próxima Phase
 
-Unstage residual se sobrar algo staged (`git restore --staged` nos paths errados) e repita 5.1–5.4.
+Unstage residual se preciso; repita 5.1–5.4.
 
 ### 6. Push (uma vez no final)
 
-Depois de **todos** os commits bem-sucedidos, com `auto_push: true`:
+Com `auto_push: true`:
 
 ```bash
 git push -u origin HEAD
 ```
 
-Garanta que `HEAD` não é branch protegida. Sem force push.
-
-Se nenhum commit foi criado → não faça push.
+Garanta que `HEAD` não é branch protegida. Sem force push. Zero commits → não faça push.
 
 ### 7. Verificar
 
@@ -200,23 +227,20 @@ git branch -vv
 
 ## Saída
 
-Liste, em ordem:
-
 1. Branch (se criada)
-2. Cada commit: hash curto + subject (`… (T0xx)`)
-3. Tasks puladas (e por quê)
+2. Cada commit: hash + subject (Phase + range de Txxx)
+3. Phases/tasks puladas (e por quê)
 4. Resultado do push
 
 Não abra PR a menos que o usuário peça.
 
 ## Exemplo esperado
 
-Diff cobre T081, T082, T083 → **3 commits**:
+Diff cobre T015, T018 (Phase 2) e T081, T082, T083 (Phase 9) → **2 commits**:
 
 ```text
-a1b2c3d feat(keycloak): implement register.ftl fields (T081)
-e4f5g6h feat(keycloak): show Estudante profile on register (T082)
-i7j8k9l feat(keycloak): add realm protocol mappers (T083)
+a1b2c3d feat(backend): complete Phase 2 foundational (T015, T018)
+e4f5g6h feat(keycloak): complete Phase 9 convergence (T081-T083)
 ```
 
-Depois um push da branch com os três.
+Depois um push da branch com os dois.
